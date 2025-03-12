@@ -112,7 +112,7 @@ int main(void)
 
 		// Reset LED
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-		HAL_Delay(100); // Pequeño tiempo de seguridad antes de leer botón
+		HAL_Delay(200); // Time Led OFF
 
 		// Read push button with very simple anti-bounce
 		if (HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin) == GPIO_PIN_RESET) { // Push button
