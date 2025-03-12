@@ -1,0 +1,41 @@
+# Archivos de configuración de Eclipse/STM32CubeIDE
+.settings/
+.cproject
+.project
+.vscode/
+
+# Archivos de compilación y binarios
+Debug/
+Release/
+build/
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.axf
+
+# Archivos de salida y logs
+*.log
+*.dep
+*.d
+
+# Archivos de dependencia del compilador
+*.d
+*.su
+*.gcda
+*.gcno
+*.gcov
+
+# Archivos temporales y de sistema
+*.bak
+*.swp
+*.swo
+*.swd
+*.swo
+*.swd
+*.dox
+
+# Archivos generados por CubeMX (si el proyecto usa CubeMX)
+MX_*/  # Si usas STM32CubeMX, ignora la carpeta de código generado automáticamente
