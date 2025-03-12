@@ -40,7 +40,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TIME_DELAY_LED 		200
+#define TIME_DELAY_LED_OFF 		200
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -112,7 +112,7 @@ int main(void)
 
 		// Reset LED
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-		HAL_Delay(200); // Time Led OFF
+		HAL_Delay(TIME_DELAY_LED_OFF); // Time Led OFF
 
 		// Read push button with very simple anti-bounce
 		if (HAL_GPIO_ReadPin(USER_Btn_GPIO_Port, USER_Btn_Pin) == GPIO_PIN_RESET) { // Push button
