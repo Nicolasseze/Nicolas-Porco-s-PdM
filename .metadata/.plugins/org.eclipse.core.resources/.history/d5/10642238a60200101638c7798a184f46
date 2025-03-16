@@ -93,7 +93,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-
   /* USER CODE BEGIN 2 */
   //Configuro el retardo del led en 100ms
   delayInit( &delayTime, ledDuration[0] );
@@ -103,7 +102,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  for( uint8_t i = 0; i < sizeof(ledDuration) / sizeof(ledDuration[0]); i++ ){ // 3 patrones de parpadeo
+	  for( uint8_t i = 0; i < 3; i++ ){ // 3 patrones de parpadeo
 		  delayWrite(&delayTime, ledDuration[i] / 2); //Configura el tiempo de parpadeo /2 DC = 50%
 
 		  uint8_t j = 0;

@@ -93,7 +93,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-
   /* USER CODE BEGIN 2 */
   //Configuro el retardo del led en 100ms
   delayInit( &delayTime, ledDuration[0] );
