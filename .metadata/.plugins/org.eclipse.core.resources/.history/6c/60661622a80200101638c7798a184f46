@@ -244,7 +244,7 @@ static void MX_GPIO_Init(void)
 /**
  * @brief Inicializa la estructura de delay con una duración dada.
  * @param delay Puntero a la estructura delay_t.
- * @param duration Duración del retardo en milisegundos (minimo 1ms).
+ * @param duration Duración del retardo en milisegundos.
  */
 void delayInit( delay_t * delay, tick_t duration ){
 
@@ -288,7 +288,7 @@ bool_t delayRead( delay_t * delay ){
 /**
  * @brief Modifica la duración de un delay ya inicializado.
  * @param delay Puntero a la estructura delay_t.
- * @param duration Nueva duración del retardo en milisegundos. Minimo 1 ms
+ * @param duration Nueva duración del retardo en milisegundos.
  */
 void delayWrite( delay_t * delay, tick_t duration ){
 
