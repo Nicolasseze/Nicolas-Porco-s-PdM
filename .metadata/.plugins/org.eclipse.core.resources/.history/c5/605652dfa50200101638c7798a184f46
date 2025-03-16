@@ -32,7 +32,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LED_DURATION 100
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -70,6 +70,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	// Defino variables para el retardo del led
 	delay_t delayTime;
+	tick_t ledDuration[] = {1000, 200, 100 };
 
   /* USER CODE END 1 */
 
@@ -94,19 +95,27 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   //Configuro el retardo del led en 100ms
-  delayInit( &delayTime, LED_DURATION );
+  delayInit( &delayTime, ledDuration[0] );
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if( delayRead( &delayTime ) )
-		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin); //Toggle Led
+	  for( uint8_t i = 0; i < 3; i++ ){ // 3 patrones de parpadeo
+		  delayWrite(&delayTime, ledDuration[i] / 2); //Configura el tiempo de parpadeo /2 DC = 50%
 
-	  /* USER CODE END WHILE */
+		  uint8_t j = 0;
+		  while( j < 5 * 2 ){ // 5 ciclos On/Off
+			  if( delayRead( &delayTime ) ){
+				  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin); //Toggle Led
+				  j++;
+			  }
+		  }
+	  }
+    /* USER CODE END WHILE */
 
-	  /* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
