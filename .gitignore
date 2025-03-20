@@ -39,3 +39,10 @@ build/
 
 # Archivos generados por CubeMX (si el proyecto usa CubeMX)
 MX_*/  # Si usas STM32CubeMX, ignora la carpeta de código generado automáticamente
+.metadata/
+.settings/
+.cproject
+.project
+.mxproject
+*.launch
+Debug/
