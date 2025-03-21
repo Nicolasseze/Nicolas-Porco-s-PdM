@@ -2,65 +2,59 @@
  * API_delay.c
  *
  *  Created on: Mar 20, 2025
- *      Author: nicolas-porco
+ *      Author: Nicolás Porco
+ *
+ *  @brief Implementación de funciones para manejo de retardos no bloqueantes.
+ *  @details Este archivo contiene la lógica para inicializar, leer, actualizar
+ *  y verificar el estado de un retardo utilizando el contador de sistema (HAL_GetTick()).
  */
 
-/**
- * @brief Inicializa la estructura de delay con una duración dada.
- * @param delay Puntero a la estructura delay_t.
- * @param duration Duración del retardo en milisegundos (minimo 1ms).
- */
 #include "API_delay.h"
 
-void delayInit( delay_t * delay, tick_t duration ){
+void delayInit(delay_t * delay, tick_t duration) {
+	assert_param(delay);
 
-	if( delay != NULL){
-		delay->running = false;
-		if( delay->duration > 0)
-			delay->duration = duration;
-		else
-			delay->duration = 1;
-	}
+	delay->running = false;
+
+	// Asegura que la duración sea al menos 1ms
+	if (duration > 0)
+		delay->duration = duration;
+	else
+		delay->duration = 1;
 }
 
-/**
- * @brief Verifica si el retardo ha finalizado.
- * @param delay Puntero a la estructura delay_t.
- * @return true si el retardo ha finalizado, false en caso contrario.
- */
-bool_t delayRead( delay_t * delay ){
+bool_t delayRead(delay_t * delay) {
+	assert_param(delay);
 
-	if( delay == NULL)
-		return false;
-
-	if( !delay->running ){
-		// Si no esta en ejecucion, inicia el retardo
+	if (!delay->running) {
+		// Comienza el retardo si no estaba corriendo
 		delay->startTime = HAL_GetTick();
 		delay->running = true;
 		return false;
-	}
-	else {
-		//Si esta en ejecucion, verifica que haya pasado el tiempo definido
+	} else {
+		// Verifica si transcurrió el tiempo
 		if ((HAL_GetTick() - delay->startTime) >= delay->duration) {
-			delay->running = false; // Reinicia el flag
+			delay->running = false;
 			return true;
 		}
 	}
 
 	return false;
-
 }
 
-/**
- * @brief Modifica la duración de un delay ya inicializado.
- * @param delay Puntero a la estructura delay_t.
- * @param duration Nueva duración del retardo en milisegundos. Minimo 1 ms
- */
-void delayWrite( delay_t * delay, tick_t duration ){
+void delayWrite(delay_t * delay, tick_t duration) {
+	assert_param(delay);
 
-    if (delay != NULL && duration > 0) {
-        delay->duration = duration;
-    }
+	// Solo actualiza si la nueva duración es válida
+	if (duration > 0) {
+		delay->duration = duration;
+	}
+}
 
+bool_t delayIsRunning(delay_t * delay) {
+	assert_param(delay);
+
+	// Devuelve el estado actual del retardo
+	return delay->running;
 }
 

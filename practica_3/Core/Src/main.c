@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "API_delay.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -104,7 +105,10 @@ int main(void)
   while (1)
   {
 	  for( uint8_t i = 0; i < sizeof(ledDuration) / sizeof(ledDuration[0]); i++ ){ // patrones de parpadeo
-		  delayWrite(&delayTime, ledDuration[i] ); //Configura el tiempo de parpadeo /2 DC = 50%
+		  if( !delayIsRunning( &delayTime) )
+			  delayWrite(&delayTime, ledDuration[i] ); //Configura el tiempo de parpadeo DC = 50%
+		  else
+			  printf("ERROR: delayIsRunning() activo cuando no debería.\n");
 
 		  uint8_t j = 0;
 		  while( j < 2 ){ // 1 ciclo 50% DC
