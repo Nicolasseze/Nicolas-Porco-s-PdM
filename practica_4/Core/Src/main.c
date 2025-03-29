@@ -22,17 +22,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "API_delay.h"
+#include "API_debounce.h"
 #include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-typedef enum{
-	BUTTON_UP,
-	BUTTON_FALLING,
-	BUTTON_DOWN,
-	BUTTON_RAISING,
-} debounceState_t;
 
 /* USER CODE END PTD */
 
@@ -59,11 +54,9 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void debounceFSM_init( debounceState_t *);
-void debounceFSM_update(debounceState_t *);
-
 void buttonPressed( void );
 void buttonReleased( void );
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -103,14 +96,12 @@ int main(void)
 	MX_USART2_UART_Init();
 
 	/* USER CODE BEGIN 2 */
-	debounceFSM_init(&btnState);
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		debounceFSM_update(&btnState);
 
 		/* USER CODE END WHILE */
 
@@ -239,59 +230,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void debounceFSM_init( debounceState_t *state){
 
-	assert_param( state );
-
-	*state = BUTTON_UP;
-	delayInit( &debounceDelay, 40);
-
-}
-
-
-void debounceFSM_update(debounceState_t *state){
-
-	switch( *state ){
-
-	case BUTTON_UP:
-		if( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET)
-			*state = BUTTON_FALLING;
-		break;
-
-	case BUTTON_FALLING:
-		if( delayRead( &debounceDelay ) ){
-			if( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET){
-				*state = BUTTON_DOWN;
-				buttonPressed();
-			}
-			else {
-				*state = BUTTON_UP;
-			}
-		}
-		break;
-
-	case BUTTON_DOWN:
-		if( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET)
-			*state = BUTTON_RAISING;
-		break;
-
-	case BUTTON_RAISING:
-		if( delayRead( &debounceDelay ) ){
-			if( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET){
-				*state = BUTTON_UP;
-				buttonReleased();
-			}
-			else {
-				*state = BUTTON_DOWN;
-			}
-		}
-		break;
-
-	default:
-		debounceFSM_init(state);
-
-	}
-}
 
 void buttonPressed( void ){
 	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
