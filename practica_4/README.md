@@ -1,51 +1,103 @@
-# Práctica 2
-## Autor
-*Porco Mazzolini, Nicolas Ezequiel*
+# Práctica 4 - MEF Anti-Rebote en STM32 Nucleo-F446RE
 
-## Objetivo:
-Implementar un módulo de software para trabajar con retardos no bloqueantes. 
+## Objetivo
 
-### Punto 1
-Implementar las funciones auxiliares necesarias para usar retardos no bloqueantes en un archivo fuente main.c con su correspondiente archivo de cabecera main.h.
-En main.h se deben ubicar los prototipos de las siguientes funciones y las declaraciones
-typedef uint32_t tick_t; // Qué biblioteca se debe incluir para que esto compile?
-typedef bool bool_t;	  // Qué biblioteca se debe incluir para que esto compile?
-typedef struct{
-   tick_t startTime;
-   tick_t duration;
-   bool_t running;
-} delay_t;
-void delayInit( delay_t * delay, tick_t duration );
-bool_t delayRead( delay_t * delay );
-void delayWrite( delay_t * delay, tick_t duration );
+Implementar una Máquina de Estados Finitos (MEF) para realizar anti-rebote por software, detectando flancos ascendentes y descendentes del pulsador de la placa NUCLEO-F4 y ejecutando acciones asociadas. Se utilizarán retardos no bloqueantes.
 
-En main.c se deben ubicar la implementación de todas las funciones:
-Consideraciones para la implementación:
-delayInit debe cargar el valor de duración del retardo en la estructura, en el campo correspondiente. No debe iniciar el conteo del retardo. Debe inicializar el flag running en `false´.
-delayRead debe verificar el estado del flag running.
-false, tomar marca de tiempo y cambiar running a ‘true’ 
-true, hacer la cuenta para saber si el tiempo del retardo se cumplió o no:
+---
 
-‘marca de tiempo actual - marca de tiempo inicial es mayor o igual a duración del retardo’? 
-devolver un valor booleano que indique si el tiempo se cumplió o no.
-Cuando el tiempo se cumple se debe cambiar el flag running a false.
-delayWrite debe permitir cambiar el tiempo de duración de un delay existente
+## Punto 1: Implementación básica en `main.c`
 
-NOTA: para obtener una marca de tiempo se puede usar la función HAL_GetTick() que devuelve un valor que se incrementa cada 1 ms y que se puede usar como base de tiempo.
+1. Crear un nuevo proyecto como copia del proyecto de la Práctica 3.
 
-### Punto 2
-Sobre el código desarrollado para el punto 1 y sobre el mismo proyecto, implementar un programa que utilice retardos no bloqueantes y  haga parpadear el leds de la placa de desarrollo: 100 ms encendido, 100 ms apagado, en forma periódica.
+2. Implementar una MEF con los siguientes estados:
+```c
+typedef enum {
+    BUTTON_UP,
+    BUTTON_FALLING,
+    BUTTON_DOWN,
+    BUTTON_RAISING,
+} debounceState_t;
+```
 
-### Punto 3 [opcional]
-Sobre el código desarrollado para el punto 2 y sobre el mismo proyecto, implementar un programa que haga parpadear el led de la placa de desarrollo en forma periódica con el siguiente patrón:
-5 veces con período 1 segundo y ciclo de trabajo 50%.
-5 veces con período 200 ms y ciclo de trabajo 50%.
-5 veces con período 100 ms y ciclo de trabajo 50%. 
-Utilizar un vector o arreglo para definir el patrón y cambiar los tiempos de parpadeo.
+3. El estado inicial de la MEF debe ser `BUTTON_UP`.
 
-### Para pensar luego de resolver el ejercicio:
-- ¿Se pueden cambiar los tiempos de encendido de cada led fácilmente en un solo lugar del código o éstos están hardcodeados?
-- ¿Qué bibliotecas estándar se debieron agregar para que el código compile? Si las funcionalidades crecieran, habría que pensar cuál sería el mejor lugar para incluir esas bibliotecas y algunos typedefs que se usan en el ejercicio.
-- ¿Es adecuado el control de los parámetros pasados por el usuario que se hace en las funciones implementadas? ¿Se controla que sean valores válidos? ¿Se controla que estén dentro de los rangos correctos?
-- ¿Cuán reutilizable es el código implementado? 
-- ¿Cuán sencillo resulta en su implementación cambiar el patrón de tiempos de parpadeo?
+4. Las siguientes funciones deben implementarse en `main.c`:
+
+```c
+void debounceFSM_init();     // Inicializa la MEF
+void debounceFSM_update();   // Actualiza el estado de la MEF (leer entradas, lógica de transición y salidas)
+void buttonPressed();        // Encender el LED
+void buttonReleased();       // Apagar el LED
+```
+
+5. El tiempo de anti-rebote debe ser de **40 ms** usando retardos **no bloqueantes**.
+
+6. `debounceFSM_update()` debe llamarse periódicamente.
+
+---
+
+## Punto 2: Modularización del código
+
+### Estructura del Proyecto
+```
+/drivers
+  └── /API
+      ├── /inc
+      │   └── API_debounce.h
+      └── /src
+          └── API_debounce.c
+```
+
+### En `API_debounce.h`:
+- Declaraciones públicas:
+
+```c
+void debounceFSM_init();
+void debounceFSM_update();
+bool_t readKey(); // Retorna true si hubo flanco descendente. Luego pone false.
+```
+
+---
+
+### En `API_debounce.c`:
+
+- Declaraciones y variables privadas:
+  - Estado actual (tipo `debounceState_t`) declarado como `static`.
+  - Variable booleana `static bool_t keyPressed` para detectar flanco descendente.
+
+- Implementar:
+  - MEF completa con temporización no bloqueante (40 ms).
+  - Manejo de flanco descendente al pasar de `BUTTON_FALLING` a `BUTTON_DOWN`.
+
+---
+
+## Comportamiento del Programa Principal
+
+- El LED debe cambiar su frecuencia de parpadeo entre **100 ms y 500 ms** cada vez que se presione el botón.
+- Usar `readKey()` para detectar presiones reales.
+- Usar el módulo de `delay` no bloqueante (`API_delay`) para manejar el parpadeo.
+
+---
+
+## Preguntas para Reflexionar
+
+- ¿Se validan adecuadamente los parámetros pasados por el usuario?
+- ¿Se notan mejoras en la detección de pulsaciones respecto a la Práctica 0?
+- ¿Se pierden pulsaciones o hay falsos positivos?
+- ¿Cada cuánto se llama a `debounceFSM_update()` y `readKey()`? ¿Qué ocurre si se llama con una frecuencia demasiado alta o baja?
+
+---
+
+## Requisitos
+
+- STM32 Nucleo-F446RE
+- STM32CubeIDE
+- API de delay implementada en prácticas anteriores
+
+---
+
+## Créditos
+
+Posgrado en Sistemas Embebidos - Programación de Microcontroladores  
+Práctica 4 – Anti-rebote con MEF y diseño modular
