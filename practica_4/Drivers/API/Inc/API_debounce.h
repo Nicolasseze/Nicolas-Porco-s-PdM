@@ -15,27 +15,14 @@
 #include "API_delay.h"
 
 /* Typedef -------------------------------------------------------------------*/
-typedef enum{
-	BUTTON_UP,
-	BUTTON_FALLING,
-	BUTTON_DOWN,
-	BUTTON_RAISING,
-} debounceState_t;
-
-typedef struct{
-	debounceState_t state;
-	delay_t debounceDelay;
-} btn_t;
 
 
 /* Function prototypes -------------------------------------------------------*/
-void debounceFSM_init( debounceState_t *, tick_t);
+void debounceFSM_init( void );
 
+void debounceFSM_update( void );
 
-
-void debounceFSM_update( debounceState_t * , tick_t);
-
-bool_t readKey();
+bool_t readKey( GPIO_InitTypeDef* GPIOx, uint16_t GPIO_Pin );
 
 
 

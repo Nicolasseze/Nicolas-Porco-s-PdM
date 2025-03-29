@@ -45,8 +45,7 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-debounceState_t btnState;
-delay_t debounceDelay;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -72,7 +71,9 @@ int main(void)
 {
 
 	/* USER CODE BEGIN 1 */
-
+	tick_t pattern_delay[] = { 100, 200, 300, 400, 500};
+	delay_t delayLD;
+	uint8_t i = 0;
 	/* USER CODE END 1 */
 
 	/* MCU Configuration--------------------------------------------------------*/
@@ -96,12 +97,26 @@ int main(void)
 	MX_USART2_UART_Init();
 
 	/* USER CODE BEGIN 2 */
+	delayInit( &delayLD, pattern_delay[0] / 2 );
+	debounceFSM_init();
+
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1)
 	{
+		debounceFSM_update();
+		delayWrite( &delayLD, pattern_delay[i] / 2 );
+		if( readKey( B1_GPIO_Port, B1_Pin) ){
+			i++;
+			i %= 5;
+		}
+
+		for( uint8_t j = 0; j < 2; j++ ){
+			if( delayRead( &delayLD ) )
+				HAL_GPIO_TogglePin( LD2_GPIO_Port, LD2_Pin );
+		}
 
 		/* USER CODE END WHILE */
 

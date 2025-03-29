@@ -6,74 +6,116 @@
  */
 
 #include "API_debounce.h"
-#define BTN_CANT	1
+#include "main.h"
 
-static debounceState_t state[BTN_CANT] = {};
-static bool_t btnFalling = false;
-static delay_t debounceDelay;
+#define TIME_DELAY	40
 
-void debounceFSM_init( debounceState_t *pState, delay_t *pDelay, tick_t timeDelay){
+typedef enum{
+	BUTTON_UP,
+	BUTTON_FALLING,
+	BUTTON_DOWN,
+	BUTTON_RAISING,
+} debounceState_t;
 
-	assert_param( state );
+typedef struct{
 
-	state = BUTTON_UP;
-	btnFalling = false;
-	delayInit( pDelay, timeDelay);
+	debounceState_t state;
+	delay_t delay;
+	bool_t btnFalling;
+	GPIO_TypeDef* GPIOx;
+	uint16_t GPIO_Pin;
+} debounceFSM_t;
+
+
+static debounceFSM_t btn[] = {
+		{.GPIOx = B1_GPIO_Port, .GPIO_Pin = B1_Pin}
+};
+static const uint32_t cantBtn = sizeof( btn ) / sizeof( btn[0] );
+
+void debounceFSM_init( void ){
+
+	debounceFSM_t *pBtn;
+
+	pBtn = btn;
+
+	for( uint8_t i = 0; i < cantBtn; i++ ){
+		assert_param( pBtn );
+
+		pBtn->state = BUTTON_UP;
+		pBtn->btnFalling = false;
+		delayInit( &pBtn->delay, TIME_DELAY);
+		pBtn++;
+	}
 
 }
 
 
-void debounceFSM_update(debounceState_t *state, delay_t *pDelay){
+void debounceFSM_update( void ){
 
-	switch( *state ){
+	debounceFSM_t *pBtn;
 
-	case BUTTON_UP:
-		if( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET )
-			*state = BUTTON_FALLING;
-		break;
+	pBtn = btn;
 
-	case BUTTON_FALLING:
-		if( delayRead( pDelay ) ){
-			if( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET ){
-				*state = BUTTON_DOWN;
-				btnFalling = true;
+	for( uint8_t i = 0; i < cantBtn; i++ ){
+
+		assert_param( pBtn );
+
+		switch( pBtn->state ){
+
+		case BUTTON_UP:
+			if( HAL_GPIO_ReadPin(pBtn->GPIOx, pBtn->GPIO_Pin) == GPIO_PIN_RESET )
+				pBtn->state = BUTTON_FALLING;
+			break;
+
+		case BUTTON_FALLING:
+			if( delayRead( &pBtn->delay ) ){
+				if( HAL_GPIO_ReadPin(pBtn->GPIOx, pBtn->GPIO_Pin) == GPIO_PIN_RESET ){
+					pBtn->state= BUTTON_DOWN;
+					pBtn->btnFalling = true;
+				}
+				else {
+					pBtn->state = BUTTON_UP;
+				}
 			}
-			else {
-				*state = BUTTON_UP;
+			break;
+
+		case BUTTON_DOWN:
+			if( HAL_GPIO_ReadPin(pBtn->GPIOx, pBtn->GPIO_Pin) == GPIO_PIN_SET )
+				pBtn->state = BUTTON_RAISING;
+			break;
+
+		case BUTTON_RAISING:
+			if( delayRead( &pBtn->delay ) ){
+				if( HAL_GPIO_ReadPin(pBtn->GPIOx, pBtn->GPIO_Pin) == GPIO_PIN_SET ){
+					pBtn->state = BUTTON_UP;
+				}
+				else {
+					pBtn->state = BUTTON_DOWN;
+				}
 			}
+			break;
+
+		default:
+			debounceFSM_init();
+
 		}
-		break;
 
-	case BUTTON_DOWN:
-		if( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET )
-			*state = BUTTON_RAISING;
-		break;
-
-	case BUTTON_RAISING:
-		if( delayRead( pDelay ) ){
-			if( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET ){
-				*state = BUTTON_UP;
-			}
-			else {
-				*state = BUTTON_DOWN;
-			}
-		}
-		break;
-
-	default:
-		debounceFSM_init(state, pDelay);
-
+		pBtn++;
 	}
 }
 
-bool_t readKey( void ){
+bool_t readKey( GPIO_InitTypeDef* GPIOx, uint16_t GPIO_Pin){
 
-	if( btnFalling == true){
-		btnFalling = false;
+	debounceFSM_t *pBtn;
+
+	pBtn = btn;
+
+	if( pBtn->btnFalling == true){
+		pBtn->btnFalling = false;
 		return true;
 	}
 	else
-		btnFalling = false;
+		pBtn->btnFalling = false;
 
 	return false;
 
